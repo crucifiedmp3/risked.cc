@@ -1,0 +1,165 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Personal Terminal: User Profile</title>
+    <!-- Load Tailwind CSS -->
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- Configure Tailwind for a retro, monospace font -->
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=VT323&family=Inter:wght@400;700&display=swap');
+        
+        /* Using Inter as the default, but a monospaced font for the main terminal effect */
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #1a1a2e; /* Dark, deep color for depth */
+            color: #e0e0e0; /* Off-white text */
+        }
+
+        /* Retro Terminal/Console style */
+        .terminal-window {
+            background-color: #14141d; /* Slightly darker inner screen */
+            border: 4px solid #4a4a4a;
+            box-shadow: 0 0 10px rgba(74, 74, 74, 0.5), 8px 8px 0px #0a0a0a; /* Glow + heavy shadow */
+            font-family: 'VT323', monospace; /* Pixelated/Monospace font */
+            color: #39ff14; /* Neon green text for CRT effect */
+            line-height: 1.5;
+            animation: flicker 0.1s infinite alternate;
+        }
+
+        /* Optional flicker effect for authenticity */
+        @keyframes flicker {
+            0% { opacity: 0.99; }
+            100% { opacity: 1; }
+        }
+
+        /* Styling the retro scrollbar appearance */
+        .terminal-window::-webkit-scrollbar {
+            width: 12px;
+        }
+
+        .terminal-window::-webkit-scrollbar-track {
+            background: #2a2a2a;
+        }
+
+        .terminal-window::-webkit-scrollbar-thumb {
+            background-color: #4a4a4a;
+            border-radius: 20px;
+            border: 3px solid #2a2a2a;
+        }
+
+        /* Style for interactive elements */
+        .link-item {
+            display: inline-block;
+            transition: color 0.2s, background-color 0.2s;
+        }
+        .link-item:hover {
+            color: #14141d;
+            background-color: #39ff14;
+        }
+    </style>
+</head>
+<body class="p-4 md:p-8 min-h-screen flex items-center justify-center">
+
+    <!-- Retro Terminal Container -->
+    <div class="terminal-window w-full max-w-4xl p-6 md:p-10 rounded-lg h-[80vh] overflow-y-auto">
+        
+        <!-- Header Section -->
+        <header class="mb-8 border-b-2 border-green-700/50 pb-4">
+            <h1 class="text-3xl md:text-5xl uppercase tracking-widest mb-2">
+                &gt; USER PROFILE v2.1
+            </h1>
+            <p class="text-xl md:text-2xl text-green-500/70">
+                // System Status: ONLINE | C:\> _
+            </p>
+        </header>
+
+        <!-- Main Content Grid -->
+        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
+            
+            <!-- Left Column: Links (Command Prompt Style) -->
+            <section class="lg:col-span-2">
+                <h2 class="text-2xl md:text-3xl text-green-400 mb-4 tracking-wider">
+                    [DIRECTORY: /LINKS]
+                </h2>
+                
+                <ul class="space-y-3 text-xl md:text-2xl">
+                    <li>
+                        <span class="text-green-700">FILE:</span> 
+                        <a href="https://github.com/yourusername" target="_blank" class="link-item px-1 rounded">
+                           GITHUB_REPO.txt
+                        </a>
+                        <span class="text-gray-500">; Personal Code Artifacts</span>
+                    </li>
+                    <li>
+                        <span class="text-green-700">FILE:</span> 
+                        <a href="https://linkedin.com/in/yourusername" target="_blank" class="link-item px-1 rounded">
+                            CONTACT_INFO.doc
+                        </a>
+                        <span class="text-gray-500">; Professional Credentials</span>
+                    </li>
+                    <li>
+                        <span class="text-green-700">FILE:</span> 
+                        <a href="https://twitter.com/yourusername" target="_blank" class="link-item px-1 rounded">
+                            SOCIAL_FEED.log
+                        </a>
+                        <span class="text-gray-500">; Real-time data stream</span>
+                    </li>
+                    <li>
+                        <span class="text-green-700">FILE:</span> 
+                        <a href="mailto:your.email@example.com" class="link-item px-1 rounded">
+                            MAIL_CLIENT.exe
+                        </a>
+                        <span class="text-gray-500">; Direct Communications Channel</span>
+                    </li>
+                    <li>
+                        <span class="text-green-700">FILE:</span> 
+                        <a href="#" class="link-item px-1 rounded">
+                            PROJECTS.dir
+                        </a>
+                        <span class="text-gray-500">; Ongoing development archive</span>
+                    </li>
+                </ul>
+            </section>
+
+            <!-- Right Column: Info (About Me) -->
+            <section class="lg:col-span-1">
+                <h2 class="text-2xl md:text-3xl text-green-400 mb-4 tracking-wider">
+                    [PROCESS: ABOUT]
+                </h2>
+                
+                <div class="text-lg md:text-xl space-y-4">
+                    <p>
+                        // Initiating Self-Description Module...
+                    </p>
+                    <p>
+                        <span class="text-green-700">NAME:</span> [USER_NAME]
+                    </p>
+                    <p>
+                        <span class="text-green-700">OCCUPATION:</span> Digital Architect & Systems Analyst
+                    </p>
+                    <p>
+                        <span class="text-green-700">MISSION:</span> To explore and synthesize complex data structures across multiple platforms. Focused on high-efficiency, low-latency deployments.
+                    </p>
+                    <p>
+                        <span class="text-green-700">STATUS:</span> Optimizing.
+                    </p>
+                </div>
+            </section>
+        </div>
+
+        <!-- Footer / Prompt -->
+        <footer class="mt-8 pt-4 border-t-2 border-green-700/50">
+            <p class="text-xl md:text-2xl text-green-500/70">
+                C:\ACCESS_GRANTED\ > <span class="animate-pulse">_</span>
+            </p>
+            <p class="text-sm text-gray-500 mt-2">
+                (Note: Replace bracketed placeholder values with your actual info and links.)
+            </p>
+        </footer>
+
+    </div>
+
+</body>
+</html>
