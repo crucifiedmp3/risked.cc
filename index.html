@@ -1,165 +1,490 @@
-<!DOCTYPE html>
+<!doctype html>
 <html lang="en">
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>Personal Terminal: User Profile</title>
-    <!-- Load Tailwind CSS -->
-    <script src="https://cdn.tailwindcss.com"></script>
-    <!-- Configure Tailwind for a retro, monospace font -->
-    <style>
-        @import url('https://fonts.googleapis.com/css2?family=VT323&family=Inter:wght@400;700&display=swap');
-        
-        /* Using Inter as the default, but a monospaced font for the main terminal effect */
-        body {
-            font-family: 'Inter', sans-serif;
-            background-color: #1a1a2e; /* Dark, deep color for depth */
-            color: #e0e0e0; /* Off-white text */
-        }
+<meta charset="utf-8" />
+<meta name="viewport" content="width=device-width,initial-scale=1" />
+<title>risked.cc — Compiler | Playground</title>
+<link rel="icon" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 100 100%22><rect width=%22100%22 height=%22100%22 fill=%23010a0f/><text x=%2250%22 y=%2260%22 font-size=%2270%22 text-anchor=%22middle%22 fill=%2300ff8c%22 font-family=%22monospace%22>R</text></svg>">
+<style>
+  /* --- Base / Reset --- */
+  :root{
+    --bg:#03040a;
+    --panel:#071018;
+    --muted:#7b8593;
+    --accent:#00ff8c;
+    --accent-2:#7cf2ff;
+    --glass: rgba(255,255,255,0.03);
+    --danger: #ff4d6d;
+    --radius:12px;
+    --mono: ui-monospace, SFMono-Regular, Menlo, Monaco, "Roboto Mono", "Courier New", monospace;
+  }
 
-        /* Retro Terminal/Console style */
-        .terminal-window {
-            background-color: #14141d; /* Slightly darker inner screen */
-            border: 4px solid #4a4a4a;
-            box-shadow: 0 0 10px rgba(74, 74, 74, 0.5), 8px 8px 0px #0a0a0a; /* Glow + heavy shadow */
-            font-family: 'VT323', monospace; /* Pixelated/Monospace font */
-            color: #39ff14; /* Neon green text for CRT effect */
-            line-height: 1.5;
-            animation: flicker 0.1s infinite alternate;
-        }
+  *{box-sizing:border-box}
+  html,body{height:100%}
+  body{
+    margin:0;
+    font-family: Inter, system-ui, -apple-system, "Segoe UI", Roboto, "Helvetica Neue", Arial;
+    background:
+      radial-gradient(1200px 1200px at 10% 10%, rgba(16,40,60,0.08), transparent 6%),
+      radial-gradient(1100px 1100px at 90% 90%, rgba(0,120,150,0.02), transparent 10%),
+      var(--bg);
+    color:#e6eef6;
+    -webkit-font-smoothing:antialiased;
+    -moz-osx-font-smoothing:grayscale;
+    padding:28px;
+  }
 
-        /* Optional flicker effect for authenticity */
-        @keyframes flicker {
-            0% { opacity: 0.99; }
-            100% { opacity: 1; }
-        }
+  /* --- Container layout --- */
+  .wrap{
+    max-width:1200px;
+    margin:0 auto;
+    display:grid;
+    grid-template-columns: 260px 1fr 420px;
+    gap:18px;
+    align-items:start;
+  }
 
-        /* Styling the retro scrollbar appearance */
-        .terminal-window::-webkit-scrollbar {
-            width: 12px;
-        }
+  @media (max-width:1100px){
+    .wrap{grid-template-columns: 1fr; padding-bottom:60px}
+    .right {order:3}
+    .left {order:1}
+    .center {order:2}
+  }
 
-        .terminal-window::-webkit-scrollbar-track {
-            background: #2a2a2a;
-        }
+  /* --- Left: file tree / menu --- */
+  .card{
+    background:linear-gradient(180deg, rgba(255,255,255,0.02), rgba(255,255,255,0.01));
+    border-radius: var(--radius);
+    padding:14px;
+    box-shadow: 0 6px 30px rgba(0,0,0,0.6), inset 0 1px 0 rgba(255,255,255,0.02);
+    border: 1px solid rgba(255,255,255,0.03);
+  }
 
-        .terminal-window::-webkit-scrollbar-thumb {
-            background-color: #4a4a4a;
-            border-radius: 20px;
-            border: 3px solid #2a2a2a;
-        }
+  .left .logo{
+    display:flex;
+    align-items:center;
+    gap:10px;
+    margin-bottom:12px;
+  }
+  .logo .mark{
+    width:44px;height:44px;border-radius:8px;
+    background:linear-gradient(135deg,var(--accent), var(--accent-2));
+    box-shadow:0 6px 14px rgba(0,255,140,0.06), 0 0 20px rgba(0,255,140,0.05);
+    display:flex;align-items:center;justify-content:center;font-weight:700;
+    color:#051018;font-family:var(--mono);
+  }
+  .logo h1{font-size:15px;margin:0;letter-spacing:0.6px}
+  .logo p{margin:0;font-size:11px;color:var(--muted)}
 
-        /* Style for interactive elements */
-        .link-item {
-            display: inline-block;
-            transition: color 0.2s, background-color 0.2s;
-        }
-        .link-item:hover {
-            color: #14141d;
-            background-color: #39ff14;
-        }
-    </style>
+  .file-tree{margin-top:10px;font-family:var(--mono);font-size:13px;line-height:1.6}
+  .folder{color:var(--accent-2);cursor:pointer;user-select:none}
+  .file{color:#bcdfff;padding-left:12px;cursor:pointer}
+  .active-file{color:var(--accent);font-weight:600}
+
+  /* --- Center: code editor --- */
+  .editor {
+    height:72vh;
+    min-height:420px;
+    display:flex;
+    flex-direction:column;
+    gap:12px;
+  }
+
+  .editor-top{
+    display:flex;align-items:center;justify-content:space-between;gap:12px;
+  }
+  .tabs {display:flex; gap:8px; align-items:center}
+  .tab{
+    background:var(--glass);
+    padding:8px 12px;border-radius:9px;font-family:var(--mono);font-size:13px;
+    color:var(--muted); border:1px solid rgba(255,255,255,0.02);
+  }
+  .tab.active{color:var(--accent); background:linear-gradient(90deg, rgba(0,255,140,0.03), rgba(124,242,255,0.02)); box-shadow: inset 0 -4px 12px rgba(0,0,0,0.35)}
+
+  .controls {display:flex;gap:8px;align-items:center}
+  .btn{
+    background:transparent;border:1px solid rgba(255,255,255,0.04);padding:8px 12px;border-radius:10px;font-weight:600;cursor:pointer;font-family:var(--mono);
+    color:var(--muted); font-size:13px;
+  }
+  .btn.primary{
+    border-color: rgba(0,255,140,0.18); color:var(--bg); background:linear-gradient(90deg,var(--accent),var(--accent-2)); box-shadow:0 6px 18px rgba(0,255,140,0.06);
+  }
+  .btn.ghost{background:transparent}
+
+  .code-area{
+    flex:1;
+    background:linear-gradient(180deg, rgba(0,0,0,0.45), rgba(255,255,255,0.01));
+    border-radius:10px;padding:16px;overflow:auto;border:1px solid rgba(255,255,255,0.03);
+    position:relative;
+    font-family:var(--mono);
+    font-size:13px;
+  }
+
+  /* fake gutter */
+  .gutter{
+    position:absolute;left:12px;top:16px;bottom:16px;width:44px;color:var(--muted);text-align:right;padding-right:12px;user-select:none;font-size:12px
+  }
+  .code-edit{
+    margin-left:68px;white-space:pre;outline:none;color:#d8f9ea;
+    tab-size:2;min-height:100%;
+  }
+
+  /* --- Right: console / run output --- */
+  .right .panel-head{display:flex;justify-content:space-between;align-items:center;margin-bottom:10px}
+  .console{
+    height:72vh;min-height:420px;padding:14px;border-radius:var(--radius);background:#04060b;border:1px solid rgba(255,255,255,0.02);
+    overflow:auto;font-family:var(--mono);font-size:13px;line-height:1.6;color:#bfffe3;
+  }
+
+  .console .line{white-space:pre-wrap}
+  .console .time{color:var(--muted);font-size:11px;margin-bottom:6px}
+  .progress{
+    height:10px;background:rgba(255,255,255,0.03);border-radius:999px;overflow:hidden;margin-top:12px;
+    border:1px solid rgba(255,255,255,0.02);
+  }
+  .bar{height:100%;width:0;background:linear-gradient(90deg,var(--accent),var(--accent-2));transition:width 300ms ease-in-out}
+
+  /* --- visual extras --- */
+  .glitch{
+    position:relative;font-weight:800;font-family:var(--mono);
+    color:var(--accent); font-size:26px; letter-spacing:1px;
+    text-shadow: 0 0 18px rgba(0,255,140,0.16);
+  }
+  .glitch::before, .glitch::after{
+    content:attr(data-text);position:absolute;left:0;top:0;opacity:0.8;mix-blend-mode:screen;
+  }
+  .glitch::before{transform:translate(-2px,-1px);color:#7cf2ff;clip-path: inset(0 0 60% 0);opacity:0.55}
+  .glitch::after{transform:translate(2px,1px);color:#ff9bd4;clip-path: inset(40% 0 0 0);opacity:0.2}
+
+  .tagline{color:var(--muted);font-size:12px}
+
+  /* small touches */
+  a.small{color:var(--muted);text-decoration:none;font-family:var(--mono);font-size:12px}
+  .footer{margin-top:18px;color:var(--muted);font-size:12px}
+  /* scrollbar */
+  ::-webkit-scrollbar{height:10px;width:10px}
+  ::-webkit-scrollbar-thumb{background:rgba(255,255,255,0.03);border-radius:999px}
+  ::-webkit-scrollbar-track{background:transparent}
+</style>
 </head>
-<body class="p-4 md:p-8 min-h-screen flex items-center justify-center">
+<body>
+  <div class="wrap">
 
-    <!-- Retro Terminal Container -->
-    <div class="terminal-window w-full max-w-4xl p-6 md:p-10 rounded-lg h-[80vh] overflow-y-auto">
-        
-        <!-- Header Section -->
-        <header class="mb-8 border-b-2 border-green-700/50 pb-4">
-            <h1 class="text-3xl md:text-5xl uppercase tracking-widest mb-2">
-                &gt; USER PROFILE v2.1
-            </h1>
-            <p class="text-xl md:text-2xl text-green-500/70">
-                // System Status: ONLINE | C:\> _
-            </p>
-        </header>
+    <!-- LEFT: Files / project -->
+    <aside class="left card" aria-label="Project files">
+      <div class="logo">
+        <div class="mark">R</div>
+        <div>
+          <h1>risked.cc</h1>
+          <p>playground · compiler · sandbox</p>
+        </div>
+      </div>
 
-        <!-- Main Content Grid -->
-        <div class="grid grid-cols-1 lg:grid-cols-3 gap-8">
-            
-            <!-- Left Column: Links (Command Prompt Style) -->
-            <section class="lg:col-span-2">
-                <h2 class="text-2xl md:text-3xl text-green-400 mb-4 tracking-wider">
-                    [DIRECTORY: /LINKS]
-                </h2>
-                
-                <ul class="space-y-3 text-xl md:text-2xl">
-                    <li>
-                        <span class="text-green-700">FILE:</span> 
-                        <a href="https://github.com/yourusername" target="_blank" class="link-item px-1 rounded">
-                           GITHUB_REPO.txt
-                        </a>
-                        <span class="text-gray-500">; Personal Code Artifacts</span>
-                    </li>
-                    <li>
-                        <span class="text-green-700">FILE:</span> 
-                        <a href="https://linkedin.com/in/yourusername" target="_blank" class="link-item px-1 rounded">
-                            CONTACT_INFO.doc
-                        </a>
-                        <span class="text-gray-500">; Professional Credentials</span>
-                    </li>
-                    <li>
-                        <span class="text-green-700">FILE:</span> 
-                        <a href="https://twitter.com/yourusername" target="_blank" class="link-item px-1 rounded">
-                            SOCIAL_FEED.log
-                        </a>
-                        <span class="text-gray-500">; Real-time data stream</span>
-                    </li>
-                    <li>
-                        <span class="text-green-700">FILE:</span> 
-                        <a href="mailto:your.email@example.com" class="link-item px-1 rounded">
-                            MAIL_CLIENT.exe
-                        </a>
-                        <span class="text-gray-500">; Direct Communications Channel</span>
-                    </li>
-                    <li>
-                        <span class="text-green-700">FILE:</span> 
-                        <a href="#" class="link-item px-1 rounded">
-                            PROJECTS.dir
-                        </a>
-                        <span class="text-gray-500">; Ongoing development archive</span>
-                    </li>
-                </ul>
-            </section>
-
-            <!-- Right Column: Info (About Me) -->
-            <section class="lg:col-span-1">
-                <h2 class="text-2xl md:text-3xl text-green-400 mb-4 tracking-wider">
-                    [PROCESS: ABOUT]
-                </h2>
-                
-                <div class="text-lg md:text-xl space-y-4">
-                    <p>
-                        // Initiating Self-Description Module...
-                    </p>
-                    <p>
-                        <span class="text-green-700">NAME:</span> [USER_NAME]
-                    </p>
-                    <p>
-                        <span class="text-green-700">OCCUPATION:</span> Digital Architect & Systems Analyst
-                    </p>
-                    <p>
-                        <span class="text-green-700">MISSION:</span> To explore and synthesize complex data structures across multiple platforms. Focused on high-efficiency, low-latency deployments.
-                    </p>
-                    <p>
-                        <span class="text-green-700">STATUS:</span> Optimizing.
-                    </p>
-                </div>
-            </section>
+      <div class="file-tree" role="tree">
+        <div class="folder" data-path="/">/ project</div>
+        <div style="padding-left:10px;margin-top:8px">
+          <div class="file active-file" data-file="main.rs">main.rs</div>
+          <div class="file" data-file="index.html">index.html</div>
+          <div class="file" data-file="payload.js">payload.js</div>
+          <div class="file" data-file="README.md">README.md</div>
         </div>
 
-        <!-- Footer / Prompt -->
-        <footer class="mt-8 pt-4 border-t-2 border-green-700/50">
-            <p class="text-xl md:text-2xl text-green-500/70">
-                C:\ACCESS_GRANTED\ > <span class="animate-pulse">_</span>
-            </p>
-            <p class="text-sm text-gray-500 mt-2">
-                (Note: Replace bracketed placeholder values with your actual info and links.)
-            </p>
-        </footer>
+        <div style="margin-top:16px">
+          <div style="display:flex;gap:8px">
+            <button class="btn" id="newFile">New</button>
+            <button class="btn" id="saveFile">Save</button>
+            <button class="btn" id="download">Export</button>
+          </div>
+        </div>
 
-    </div>
+        <div class="footer" style="margin-top:16px">
+          <div class="tagline">status: <span id="status">idle</span></div>
+          <div style="margin-top:8px"><a class="small" href="#" id="danger">danger mode</a></div>
+        </div>
+      </div>
+    </aside>
 
+    <!-- CENTER: editor -->
+    <main class="center card editor" role="main" aria-label="Editor">
+      <div class="editor-top">
+        <div class="tabs" role="tablist">
+          <div class="tab active" data-tab="editor">editor</div>
+          <div class="tab" data-tab="terminal">terminal</div>
+          <div class="tab" data-tab="settings">settings</div>
+        </div>
+
+        <div class="controls">
+          <div class="glitch" data-text="RISKED.CC">RISKED.CC</div>
+          <button class="btn primary" id="compileBtn">COMPILE ▶</button>
+        </div>
+      </div>
+
+      <div class="code-area" id="codeArea" aria-multiline="true" role="textbox" aria-label="Code editor">
+        <div class="gutter" id="gutter"></div>
+        <div id="code" class="code-edit" contenteditable spellcheck="false" aria-label="editable code">
+/* Risked — demo code (editable)
+ * Press COMPILE to run through the pipeline.
+ */
+
+fn main() {
+  println!("hello risked.cc");
+  // inject chaos...
+}
+        </div>
+      </div>
+
+      <div style="display:flex;gap:10px;align-items:center;justify-content:flex-end">
+        <button class="btn" id="formatBtn">format</button>
+        <button class="btn" id="clearBtn">clear</button>
+      </div>
+    </main>
+
+    <!-- RIGHT: console -->
+    <aside class="right card" aria-label="Compiler console">
+      <div class="panel-head">
+        <div>
+          <div style="font-family:var(--mono);font-weight:700;color:var(--accent)">compiler • sandbox</div>
+          <div class="time" id="consoleTime">ready</div>
+        </div>
+        <div style="text-align:right">
+          <div style="font-size:13px;color:var(--muted)">runtime</div>
+          <div style="font-family:var(--mono);font-weight:700">wasm · vm</div>
+        </div>
+      </div>
+
+      <div class="console" id="console" role="log" aria-live="polite">
+        <div class="line">→ console ready. click COMPILE to run pipeline.</div>
+      </div>
+
+      <div class="progress" aria-hidden="true" style="margin-top:12px">
+        <div class="bar" id="progressBar" style="width:0%"></div>
+      </div>
+    </aside>
+  </div>
+
+<script>
+/* --- Utility & UI wiring --- */
+const code = document.getElementById('code');
+const gutter = document.getElementById('gutter');
+const compileBtn = document.getElementById('compileBtn');
+const consoleEl = document.getElementById('console');
+const progressBar = document.getElementById('progressBar');
+const statusEl = document.getElementById('status');
+const consoleTime = document.getElementById('consoleTime');
+
+// initialize gutter lines
+function refreshGutter(){
+  const lines = code.innerText.split('\\n').length;
+  let s = '';
+  for(let i=1;i<=lines;i++) s += i + '\\n';
+  gutter.textContent = s;
+}
+refreshGutter();
+code.addEventListener('input', refreshGutter);
+
+// simple "format" that trims trailing spaces (non-language specific)
+document.getElementById('formatBtn').addEventListener('click', () => {
+  const t = code.innerText.replace(/[ \\t]+$/gm, '');
+  code.innerText = t;
+  refreshGutter();
+  appendConsole('formatter: applied whitespace trim.');
+});
+
+// clear console
+document.getElementById('clearBtn').addEventListener('click', () => {
+  consoleEl.innerHTML = '';
+  appendConsole('console cleared.');
+});
+
+// file-tree click to load sample files
+document.querySelectorAll('.file').forEach(f=>{
+  f.addEventListener('click', ()=> {
+    document.querySelectorAll('.file').forEach(x=>x.classList.remove('active-file'));
+    f.classList.add('active-file');
+    const name = f.dataset.file;
+    loadFile(name);
+  });
+});
+
+function loadFile(name){
+  statusEl.textContent = 'loading ' + name;
+  // small built-in samples
+  const samples = {
+    "main.rs": `fn main() {
+  println!("hello risked.cc");
+  // experiment: echo pipeline
+}`,
+    "index.html": `<!doctype html><html><body><h1>risked.cc demo</h1></body></html>`,
+    "payload.js": `console.log("payload loaded");`,
+    "README.md": `# risked\nA tiny compiler playground demo.`
+  };
+  code.innerText = samples[name] || '// new file';
+  refreshGutter();
+  statusEl.textContent = 'idle';
+  appendConsole('loaded ' + name);
+}
+
+// Export current content into a .txt download
+document.getElementById('download').addEventListener('click', ()=>{
+  const blob = new Blob([code.innerText], {type:'text/plain'});
+  const url = URL.createObjectURL(blob);
+  const a = document.createElement('a');
+  a.href = url; a.download = 'snippet.txt';
+  document.body.appendChild(a);
+  a.click();
+  a.remove();
+  URL.revokeObjectURL(url);
+  appendConsole('exported snippet.txt');
+});
+
+document.getElementById('saveFile').addEventListener('click', ()=>{
+  // simple localStorage save
+  localStorage.setItem('risked.code', code.innerText);
+  appendConsole('saved to localStorage (risked.code)');
+});
+document.getElementById('newFile').addEventListener('click', ()=>{
+  code.innerText = '// new snippet';
+  refreshGutter();
+  appendConsole('new file created');
+});
+
+// restore autosave at load
+window.addEventListener('load', ()=>{
+  const s = localStorage.getItem('risked.code');
+  if(s){ code.innerText = s; refreshGutter(); appendConsole('restored autosave'); }
+});
+
+// simple console append helper
+function appendConsole(text, tone='info'){
+  const div = document.createElement('div');
+  div.className = 'line';
+  const time = new Date().toLocaleTimeString();
+  div.innerHTML = `<span style="color:var(--muted);font-size:12px">[${time}]</span> ${escapeHtml(text)}`;
+  consoleEl.appendChild(div);
+  consoleEl.scrollTop = consoleEl.scrollHeight;
+  consoleTime.textContent = time;
+}
+
+// escape html helper
+function escapeHtml(s){
+  return s.replaceAll('&','&amp;').replaceAll('<','&lt;').replaceAll('>','&gt;');
+}
+
+/* --- Fake compile pipeline (animated) --- */
+function setProgress(p){
+  progressBar.style.width = p + '%';
+}
+
+compileBtn.addEventListener('click', async () => {
+  compileBtn.disabled = true;
+  compileBtn.innerText = 'COMPILING...';
+  statusEl.textContent = 'compiling';
+  consoleEl.innerHTML = '';
+  setProgress(4);
+  appendConsole('pipeline: initializing environment...');
+  await delay(500);
+
+  // stage 1: preflight
+  setProgress(15);
+  appendConsole('stage 1: preflight checks...');
+  await delay(700);
+
+  // stage 2: lexing
+  setProgress(30);
+  appendConsole('stage 2: lexer: scanning tokens...');
+  await delay(600);
+  randomWarnings();
+
+  // stage 3: parsing
+  setProgress(48);
+  appendConsole('stage 3: parser: generating AST...');
+  await delay(800);
+
+  // stage 4: typecheck / borrow-check-ish
+  setProgress(66);
+  appendConsole('stage 4: type system: validating...');
+  await delay(700);
+
+  // stage 5: optimize
+  setProgress(82);
+  appendConsole('stage 5: optimizer: applying passes...');
+  await delay(600);
+
+  // stage 6: codegen / link
+  setProgress(95);
+  appendConsole('stage 6: codegen: emitting object...');
+  await delay(700);
+
+  // done
+  setProgress(100);
+  appendConsole('>>> build succeeded — output: sandbox.wasm (virtual)');
+  appendConsole('runtime: launching virtualization layer...');
+  await delay(400);
+
+  // run output
+  appendConsole('program output:');
+  const lines = simulateProgramOutput(code.innerText);
+  for(const l of lines){ appendConsole(l); await delay(220); }
+
+  statusEl.textContent = 'idle';
+  compileBtn.disabled = false;
+  compileBtn.innerText = 'COMPILE ▶';
+});
+
+// small helpers
+function delay(ms){ return new Promise(res => setTimeout(res, ms)); }
+
+// produce occasional fake warnings
+function randomWarnings(){
+  if(Math.random() < 0.5){
+    appendConsole('warning: unused variable `x` at line 3');
+  }
+  if(Math.random() < 0.25){
+    appendConsole('warning: implicit cast may be lossy at line 7');
+  }
+}
+
+// very basic "run" simulation that looks for prints in code
+function simulateProgramOutput(src){
+  const out = [];
+  const re = /println!\\((?:\\"|')(.*?)(?:\\"|')\\)/g;
+  let m;
+  while((m = re.exec(src)) !== null){
+    out.push(m[1]);
+  }
+  if(out.length === 0){
+    // fallback messages
+    out.push('> program started');
+    out.push('> no explicit prints found — nothing to display');
+    out.push('> exit code: 0');
+  } else {
+    out.push('> exit code: 0');
+  }
+  return out;
+}
+
+/* --- small safety / extras UI --- */
+document.getElementById('danger').addEventListener('click',(e)=>{
+  e.preventDefault();
+  appendConsole('danger mode toggled — sandbox restraints active');
+});
+
+/* accessibility: allow tab char insert inside contenteditable */
+code.addEventListener('keydown', function(e){
+  if(e.key === 'Tab'){
+    e.preventDefault();
+    const sel = window.getSelection();
+    if(!sel.rangeCount) return;
+    const range = sel.getRangeAt(0);
+    const tabNode = document.createTextNode('  ');
+    range.insertNode(tabNode);
+    range.setStartAfter(tabNode);
+    range.setEndAfter(tabNode);
+    sel.removeAllRanges();
+    sel.addRange(range);
+    refreshGutter();
+  }
+});
+</script>
 </body>
 </html>
